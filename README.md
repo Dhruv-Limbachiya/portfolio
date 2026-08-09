@@ -1,36 +1,143 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dhruv Limbachiya — portfolio
 
-## Getting Started
+Personal portfolio site. Next.js static export, deployed to GitHub Pages.
 
-First, run the development server:
+**Design direction:** "Aperture" — deep near-black canvas, one electric
+blue-violet accent, generous radii, large tight typography. Geist carries both
+display and reading; Geist Mono is held back for evidence (metrics, labels,
+commands). Dark is the primary identity; light is a genuine second design.
+
+Motion is scroll-choreographed: the hero stage recedes — scaling back, softening
+and lifting — while the light behind it swells; metrics count up on entry;
+content resolves out of blur rather than sliding. Four durations, three curves,
+one stagger, all defined in `src/lib/motion.ts`.
+
+---
+
+## Running it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+npm run build
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`npm run build` produces a fully static site in `out/`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Before it goes live
 
-To learn more about Next.js, take a look at the following resources:
+Three things need your input. Everything else is done.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 1. Photographs
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Drop your files into `public/photos/`:
 
-## Deploy on Vercel
+| File | Used for | Suggested crop |
+| --- | --- | --- |
+| `portrait.jpg` | "How this started" chapter | 4:5 portrait |
+| `candid-1.jpg` | "Away from the screen" chapter | 1:1 square |
+| `candid-2.jpg` | Spare slot | any |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Then open `src/lib/content.ts` and set:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```ts
+export const photos = {
+  ready: true,   // <- flip this
+  ...
+```
+
+Until `ready` is `true`, every photo slot renders a designed typographic panel
+instead of a broken image, so the site is never in a half-finished state.
+
+Export at roughly 1600px on the long edge and compress — there is no image
+optimizer on GitHub Pages.
+
+### 2. Contact form key
+
+The site is static, so the form posts to [Web3Forms](https://web3forms.com)
+(free). Create a key with your email address, then:
+
+- **Local:** copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_WEB3FORMS_KEY`
+- **Deployed:** add it as a repository *secret* named `WEB3FORMS_KEY`
+
+Without a key the form degrades to a direct mail link — functional, just less
+convenient.
+
+### 3. Repository name
+
+- **User site** — name the repo `Dhruv-Limbachiya.github.io`. Nothing else to do;
+  the site serves from the domain root.
+- **Project repo** — any other name means the site serves from `/repo-name`, so add
+  a repository *variable* `NEXT_PUBLIC_BASE_PATH` set to `/repo-name`.
+
+Then in **Settings → Pages**, set **Source** to **GitHub Actions**. Pushing to
+`main` deploys via `.github/workflows/deploy.yml`.
+
+---
+
+## Editing content
+
+Everything factual lives in **`src/lib/content.ts`** — there is no copy hard-coded
+in components. That file is the single source of truth for:
+
+- `person`, `personal`, `photos` — who Dhruv is
+- `caseStudies` — six case studies, including the Pay+ flagship with its
+  transaction spine and interactive architecture diagram
+- `tooling` — the four internal systems
+- `journey`, `expertise`, `headlineMetrics`
+
+### Rules encoded in that file
+
+- **No EDC partner is ever named.** Vendors are referred to generically. This was
+  a deliberate confidentiality decision — keep it.
+- **No invented facts.** Every claim traces to the CV or to Dhruv's own answers.
+- **Metrics always travel with the engineering that produced them.** A bare number
+  reads as inflated.
+
+---
+
+## Structure
+
+```
+src/
+  app/                    routes, metadata, sitemap, robots, OG image
+    work/[slug]/          case studies (generateStaticParams)
+  components/
+    chrome/               nav, footer, cursor, theme toggle, reading-path switch
+    primitives/           Reveal, MaskText, Photo, Magnetic, Section
+    home/                 the chapters
+    case/                 TransactionSpine, Schematic, CaseSection
+  lib/
+    content.ts            all facts
+    variants.ts           reading paths and chapter ordering
+    motion.ts             the motion language — four durations, three curves
+```
+
+### Reading paths
+
+The page re-orders itself for three readers (Hiring / Engineering / Consulting)
+via the control in the header. A path **never hides content** — every chapter
+renders in every path, only the order changes, and chapter numbers follow the
+resolved order. The site is complete without ever touching it.
+
+State lives in `localStorage` and the `?v=` query parameter, so a link can be
+shared pointing at a specific path.
+
+---
+
+## Accessibility and motion
+
+- All colour tokens clear WCAG AA at their smallest used size, in both themes.
+- `prefers-reduced-motion` is honoured throughout. Motion is stripped; content
+  still lands in its final state. The horizontal career track falls back to a
+  vertical timeline, because without the scroll-linked transform half of it
+  would be unreachable.
+- The custom cursor and magnetic hovers only mount on fine pointers.
+- The architecture diagram's nodes are real focusable buttons on wide screens,
+  and a linear list on narrow ones — never both, so keyboard focus never lands
+  on something invisible.

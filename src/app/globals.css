@@ -1,26 +1,438 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   VISUAL IDENTITY — "Aperture"
+   Deep near-black, one electric accent, generous radii, big tight type.
+   Built for scroll choreography: sticky stages, scale/blur reveals, and
+   light that moves behind the content.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #060608;
+  --bg-elev: #0b0b10;
+  --surface: #121218;
+  --surface-2: #1a1a22;
+
+  --line: #22222c;
+  --line-soft: #16161e;
+  --line-strong: #383843;
+
+  /* Contrast on --bg: text 19.4:1, text-2 8.0:1, text-3 5.0:1 */
+  --text: #fbfbfd;
+  --text-2: #a0a0ae;
+  --text-3: #7b7b8a;
+
+  /* Electric accent, 6.7:1 on the canvas */
+  --signal: #6e8aff;
+  --signal-2: #b06bff;
+  --signal-ink: #05050a;
+  --signal-soft: rgb(110 138 255 / 0.12);
+  --signal-line: rgb(110 138 255 / 0.3);
+
+  --ok: #46e0a0;
+  --warn: #ffcb5c;
+  --fail: #ff6b6b;
+
+  --grain: 0.022;
+  --glow: radial-gradient(
+    60% 60% at 50% 50%,
+    color-mix(in oklab, var(--signal) 55%, transparent) 0%,
+    transparent 70%
+  );
+
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.04), 0 30px 60px -30px rgb(0 0 0 / 0.9);
+  --shadow-lift: 0 1px 0 rgb(255 255 255 / 0.06), 0 50px 90px -40px rgb(0 0 0 / 1);
+
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f6f6f8;
+  --bg-elev: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #eeeef3;
+
+  --line: #e2e2e9;
+  --line-soft: #ededf2;
+  --line-strong: #c3c3ce;
+
+  --text: #08080c;
+  --text-2: #4e4e5c;
+  --text-3: #6b6b7a;
+
+  --signal: #4a5fe0;
+  --signal-2: #8b47db;
+  --signal-ink: #ffffff;
+  --signal-soft: rgb(74 95 224 / 0.09);
+  --signal-line: rgb(74 95 224 / 0.26);
+
+  --ok: #0f8f5f;
+  --warn: #8a6100;
+  --fail: #cf3030;
+
+  --grain: 0.014;
+  --shadow-card: 0 1px 2px rgb(20 20 40 / 0.05), 0 24px 48px -28px rgb(20 20 40 / 0.28);
+  --shadow-lift: 0 2px 6px rgb(20 20 40 / 0.07), 0 48px 80px -36px rgb(20 20 40 / 0.34);
+
+  color-scheme: light;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-bg-elev: var(--bg-elev);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-line-strong: var(--line-strong);
+
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+
+  --color-signal: var(--signal);
+  --color-signal-2: var(--signal-2);
+  --color-signal-ink: var(--signal-ink);
+  --color-signal-soft: var(--signal-soft);
+  --color-signal-line: var(--signal-line);
+
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-fail: var(--fail);
+
+  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 34px;
+
+  /* Apple-adjacent curves: long expo-out entrances, symmetric scroll easing */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-drift: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ---------------------------------------------------------------- base ---- */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 16.5px;
+    line-height: 1.6;
+    letter-spacing: -0.011em;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -50%;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: var(--grain);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  ::selection {
+    background: var(--signal);
+    color: var(--signal-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  .tnum {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .t-display {
+    font-size: clamp(3.2rem, 11vw, 11rem);
+    line-height: 0.88;
+    letter-spacing: -0.05em;
+    font-weight: 500;
+  }
+  /* Upper bound is set by the longest claim line at the widest breakpoint;
+     lower bound by the same line at 390px. Neither may ever wrap — the line
+     break is the composition, not a fallback. */
+  .t-hero {
+    font-size: clamp(2.75rem, 9.5vw, 8rem);
+    line-height: 0.92;
+    letter-spacing: -0.052em;
+    font-weight: 500;
+  }
+  .t-h1 {
+    font-size: clamp(2.4rem, 6vw, 5rem);
+    line-height: 0.98;
+    letter-spacing: -0.042em;
+    font-weight: 500;
+  }
+  .t-h2 {
+    font-size: clamp(1.95rem, 4.2vw, 3.4rem);
+    line-height: 1.04;
+    letter-spacing: -0.038em;
+    font-weight: 500;
+  }
+  .t-h3 {
+    font-size: clamp(1.3rem, 2.1vw, 1.75rem);
+    line-height: 1.18;
+    letter-spacing: -0.03em;
+    font-weight: 500;
+  }
+
+  .t-lead {
+    font-size: clamp(1.075rem, 1.45vw, 1.3rem);
+    line-height: 1.55;
+    letter-spacing: -0.018em;
+    color: var(--text-2);
+  }
+  .t-body {
+    font-size: clamp(0.97rem, 1.05vw, 1.05rem);
+    line-height: 1.65;
+    letter-spacing: -0.012em;
+  }
+
+  .t-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .t-mono {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+  }
+
+  /* The human voice: pull quotes and statements Dhruv would say out loud.
+     Used sparingly — once per section at most. */
+  .t-voice {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.042em;
+    line-height: 1.1;
+  }
+
+  /* Gradient type — used once or twice, never as a habit */
+  .t-gradient {
+    /* Sweeps across the whole line rather than switching partway, so the
+       colour never appears to break at a hyphen or word boundary. */
+    background: linear-gradient(100deg, var(--text) 0%, var(--signal) 58%, var(--signal-2) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Light that lives behind the content */
+  .aura {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(70px);
+    background: var(--glow);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  /* A hairline that catches the light along the top edge of a card */
+  .edge-light {
+    position: relative;
+  }
+  .edge-light::before {
+    content: "";
+    position: absolute;
+    inset-inline: 12%;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--signal) 70%, transparent),
+      transparent
+    );
+    opacity: 0;
+    transition: opacity 0.6s var(--ease-out-expo);
+  }
+  .edge-light:hover::before {
+    opacity: 1;
+  }
+
+  .grid-field {
+    background-image: linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .mask-fade-b {
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  }
+  .mask-fade-x {
+    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  .shell {
+    width: 100%;
+    max-width: 86rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 5rem);
+  }
+
+  .shell-narrow {
+    width: 100%;
+    max-width: 50rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 3rem);
+  }
+}
+
+/* ------------------------------------------------- schematic data flow ---- */
+@keyframes edge-flow {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+.edge-pulse {
+  offset-distance: 0%;
+  animation: edge-flow 3s linear infinite;
+}
+
+/* ---------------------------------------------------------- scroll cue ---- */
+@keyframes scroll-hint {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+
+.scroll-hint {
+  animation: scroll-hint 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/* --------------------------------------------------------- aura drift ----- */
+@keyframes aura-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3%, -4%, 0) scale(1.12);
+  }
+}
+
+.aura-drift {
+  animation: aura-drift 18s var(--ease-drift) infinite;
+}
+
+/* ------------------------------------------------------ theme transition --- */
+::view-transition-old(root) {
+  animation: none;
+}
+
+::view-transition-new(root) {
+  animation: theme-wipe 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@keyframes theme-wipe {
+  from {
+    clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
+  to {
+    clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
+}
+
+/* ------------------------------------------------------- reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  body::before,
+  .edge-pulse {
+    display: none;
+  }
+
+  /* Content must never be left hidden by a motion technique the reader opted
+     out of. `!important` deliberately outranks the animation library's inline
+     styles — a clipped headline or an invisible number is a correctness bug. */
+  [data-mask-line] {
+    transform: none !important;
+  }
+
+  [data-uncover] {
+    clip-path: none !important;
+    transform: none !important;
+  }
+
+  [data-scroll-fade] {
+    opacity: 1 !important;
+  }
+
+  [data-scroll-stage] {
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    position: static !important;
+  }
+
+  ::view-transition-new(root),
+  ::view-transition-old(root) {
+    animation: none;
+  }
 }
